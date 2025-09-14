@@ -37,6 +37,43 @@ interface DetailedRaceResultData {
   start_info?: Record<string, StartInfo>;
 }
 
+// プログラム用型定義
+interface RacerInfo {
+  racer_boat_number: number;
+  racer_name: string;
+  racer_number: number;
+  racer_class_number: string;
+  racer_age: number;
+  racer_weight: number;
+  racer_flying_count: number;
+  racer_late_count: number;
+  racer_average_start_timing: number;
+  racer_national_top_1_percent: number;
+  racer_national_top_2_percent: number;
+  racer_national_top_3_percent: number;
+  racer_local_top_1_percent: number;
+  racer_local_top_2_percent: number;
+  racer_local_top_3_percent: number;
+  racer_assigned_motor_number: number;
+  racer_assigned_motor_top_2_percent: number;
+  racer_assigned_motor_top_3_percent: number;
+  racer_assigned_boat_number: number;
+  racer_assigned_boat_top_2_percent: number;
+  racer_assigned_boat_top_3_percent: number;
+}
+
+interface ProgramData {
+  race_date: string;
+  race_stadium_number: number;
+  race_number: number;
+  race_closed_at: string;
+  race_grade_number: number;
+  race_title: string;
+  race_subtitle: string;
+  race_distance: number;
+  boats: Record<string, RacerInfo>;
+}
+
 // レース結果表示コンポーネント
 const RaceResultDisplay: React.FC<{ data: any }> = ({ data }) => {
   // データが詳細結果形式かチェック
@@ -157,6 +194,222 @@ const RaceResultDisplay: React.FC<{ data: any }> = ({ data }) => {
           </div>
         </div>
       )}
+
+      {/* 生データ（デバッグ用） */}
+      <details className="raw-data">
+        <summary>生データを表示</summary>
+        <pre className="data-json">{JSON.stringify(data, null, 2)}</pre>
+      </details>
+    </div>
+  );
+};
+
+// プログラム表示コンポーネント
+const ProgramDisplay: React.FC<{ data: any }> = ({ data }) => {
+  // データがプログラム形式かチェック
+  const isProgramData =
+    data.data && data.data.boats && typeof data.data.boats === "object";
+
+  if (!isProgramData) {
+    return <pre className="data-json">{JSON.stringify(data, null, 2)}</pre>;
+  }
+
+  const programData = data.data as ProgramData;
+  const racers = Object.values(programData.boats).sort(
+    (a, b) => a.racer_boat_number - b.racer_boat_number
+  );
+
+  // 艇番の色マッピング（ボートレースの伝統色）
+  const getBoatColor = (boatNumber: number) => {
+    const colors = {
+      1: "#FFFFFF", // 白
+      2: "#000000", // 黒
+      3: "#FF0000", // 赤
+      4: "#0000FF", // 青
+      5: "#FFFF00", // 黄
+      6: "#00FF00", // 緑
+    };
+    return colors[boatNumber as keyof typeof colors] || "#CCCCCC";
+  };
+
+  const getBoatColorClass = (boatNumber: number) => {
+    return `boat-color-${boatNumber}`;
+  };
+
+  return (
+    <div className="program-display">
+      {/* レース情報ヘッダー */}
+      <div className="race-info-header">
+        <h4>🏁 レース情報</h4>
+        <div className="race-info-grid">
+          <div className="race-info-item">
+            <span className="label">タイトル:</span>
+            <span className="value">{programData.race_title}</span>
+          </div>
+          <div className="race-info-item">
+            <span className="label">サブタイトル:</span>
+            <span className="value">{programData.race_subtitle}</span>
+          </div>
+          <div className="race-info-item">
+            <span className="label">距離:</span>
+            <span className="value">{programData.race_distance}m</span>
+          </div>
+          <div className="race-info-item">
+            <span className="label">締切:</span>
+            <span className="value">
+              {new Date(programData.race_closed_at).toLocaleString("ja-JP")}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 選手一覧 */}
+      <div className="racers-grid">
+        {racers.map((racer) => (
+          <div
+            key={racer.racer_boat_number}
+            className={`racer-card ${getBoatColorClass(
+              racer.racer_boat_number
+            )}`}
+          >
+            {/* 艇番ヘッダー */}
+            <div className="racer-header">
+              <div
+                className="boat-number"
+                style={{
+                  backgroundColor: getBoatColor(racer.racer_boat_number),
+                  color:
+                    racer.racer_boat_number === 1 ||
+                    racer.racer_boat_number === 5
+                      ? "#000"
+                      : "#FFF",
+                }}
+              >
+                {racer.racer_boat_number}
+              </div>
+              <div className="racer-basic-info">
+                <div className="racer-name">{racer.racer_name}</div>
+                <div className="racer-details">
+                  {racer.racer_age}歳 / {racer.racer_class_number}級 /{" "}
+                  {racer.racer_weight}kg
+                </div>
+              </div>
+            </div>
+
+            {/* 勝率情報 */}
+            <div className="stats-section">
+              <h5>🏆 勝率</h5>
+              <div className="stats-grid">
+                <div className="stat-item">
+                  <span className="stat-label">全国1着率</span>
+                  <span className="stat-value">
+                    {racer.racer_national_top_1_percent.toFixed(2)}%
+                  </span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">全国2連率</span>
+                  <span className="stat-value">
+                    {racer.racer_national_top_2_percent.toFixed(2)}%
+                  </span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">全国3連率</span>
+                  <span className="stat-value">
+                    {racer.racer_national_top_3_percent.toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 当地成績 */}
+            <div className="stats-section">
+              <h5>🏟️ 当地成績</h5>
+              <div className="stats-grid">
+                <div className="stat-item">
+                  <span className="stat-label">当地1着率</span>
+                  <span className="stat-value">
+                    {racer.racer_local_top_1_percent.toFixed(2)}%
+                  </span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">当地2連率</span>
+                  <span className="stat-value">
+                    {racer.racer_local_top_2_percent.toFixed(2)}%
+                  </span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">当地3連率</span>
+                  <span className="stat-value">
+                    {racer.racer_local_top_3_percent.toFixed(2)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* スタート情報 */}
+            <div className="stats-section">
+              <h5>🚀 スタート</h5>
+              <div className="stats-grid">
+                <div className="stat-item">
+                  <span className="stat-label">平均ST</span>
+                  <span className="stat-value">
+                    {racer.racer_average_start_timing.toFixed(2)}
+                  </span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">F</span>
+                  <span className="stat-value F-count">
+                    {racer.racer_flying_count}
+                  </span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">L</span>
+                  <span className="stat-value L-count">
+                    {racer.racer_late_count}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* モーター・ボート成績 */}
+            <div className="stats-section">
+              <h5>🚤 機器成績</h5>
+              <div className="machine-stats">
+                <div className="machine-item">
+                  <span className="machine-label">
+                    モーター {racer.racer_assigned_motor_number}
+                  </span>
+                  <div className="machine-stats-row">
+                    <span>
+                      2連率:{" "}
+                      {racer.racer_assigned_motor_top_2_percent.toFixed(1)}%
+                    </span>
+                    <span>
+                      3連率:{" "}
+                      {racer.racer_assigned_motor_top_3_percent.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="machine-item">
+                  <span className="machine-label">
+                    ボート {racer.racer_assigned_boat_number}
+                  </span>
+                  <div className="machine-stats-row">
+                    <span>
+                      2連率:{" "}
+                      {racer.racer_assigned_boat_top_2_percent.toFixed(1)}%
+                    </span>
+                    <span>
+                      3連率:{" "}
+                      {racer.racer_assigned_boat_top_3_percent.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
 
       {/* 生データ（デバッグ用） */}
       <details className="raw-data">
@@ -362,6 +615,8 @@ function App() {
               </h3>
               {activeTab === "results" ? (
                 <RaceResultDisplay data={data} />
+              ) : activeTab === "programs" ? (
+                <ProgramDisplay data={data} />
               ) : (
                 <pre className="data-json">{JSON.stringify(data, null, 2)}</pre>
               )}

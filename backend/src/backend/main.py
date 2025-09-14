@@ -86,6 +86,55 @@ class DetailedRaceResults(BaseModel):
     data: DetailedRaceResultData
 
 
+# プログラム用レスポンスモデル
+class RacerInfo(BaseModel):
+    """選手情報モデル"""
+    racer_boat_number: int
+    racer_name: str
+    racer_number: int
+    racer_class_number: str
+    racer_branch_number: Optional[int] = None
+    racer_birthplace_number: Optional[int] = None
+    racer_age: int
+    racer_weight: float
+    racer_flying_count: int
+    racer_late_count: int
+    racer_average_start_timing: float
+    racer_national_top_1_percent: float
+    racer_national_top_2_percent: float
+    racer_national_top_3_percent: float
+    racer_local_top_1_percent: float
+    racer_local_top_2_percent: float
+    racer_local_top_3_percent: float
+    racer_assigned_motor_number: int
+    racer_assigned_motor_top_2_percent: float
+    racer_assigned_motor_top_3_percent: float
+    racer_assigned_boat_number: int
+    racer_assigned_boat_top_2_percent: float
+    racer_assigned_boat_top_3_percent: float
+
+
+class DetailedProgramData(BaseModel):
+    """詳細なプログラムデータ"""
+    race_date: str
+    race_stadium_number: int
+    race_number: int
+    race_closed_at: str
+    race_grade_number: int
+    race_title: str
+    race_subtitle: str
+    race_distance: int
+    boats: dict[str, RacerInfo]
+
+
+class DetailedPrograms(BaseModel):
+    """詳細プログラムのレスポンスモデル"""
+    race_date: str
+    stadium_number: int
+    race_number: int
+    data: DetailedProgramData
+
+
 class ErrorResponse(BaseModel):
     """エラーレスポンスモデル"""
     error: str
@@ -104,7 +153,7 @@ async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 
-@app.get("/api/programs/{race_date}/{stadium_number}/{race_number}", response_model=RaceData)
+@app.get("/api/programs/{race_date}/{stadium_number}/{race_number}", response_model=DetailedPrograms)
 async def get_program(
     race_date: str,
     stadium_number: int,
@@ -122,15 +171,42 @@ async def get_program(
         # 日付の変換
         parsed_date = datetime.strptime(race_date, "%Y-%m-%d").date()
 
-        # データ取得
-        program_data = Scraper.scrape_programs(parsed_date, stadium_number, race_number)
+        # スクレイパーインスタンスを取得
+        scraper = Scraper.get_instance()
 
-        return RaceData(
-            race_date=race_date,
-            stadium_number=stadium_number,
-            race_number=race_number,
-            data=program_data
-        )
+        # データ取得
+        program_data = scraper.scrape_programs(parsed_date, stadium_number, race_number)
+        
+        # プログラムデータを取得（ネストした構造から特定のレースデータを抽出）
+        # キーは数値で返される
+        if stadium_number in program_data and race_number in program_data[stadium_number]:
+            race_details = program_data[stadium_number][race_number]
+            
+            # 選手データを構造化（数値キーを文字列に変換）
+            structured_boats = {}
+            for boat_num, racer_data in race_details.get("boats", {}).items():
+                structured_boats[str(boat_num)] = RacerInfo(**racer_data)
+            
+            detailed_data = DetailedProgramData(
+                race_date=race_details["race_date"],
+                race_stadium_number=race_details["race_stadium_number"],
+                race_number=race_details["race_number"],
+                race_closed_at=race_details["race_closed_at"],
+                race_grade_number=race_details["race_grade_number"],
+                race_title=race_details["race_title"],
+                race_subtitle=race_details["race_subtitle"],
+                race_distance=race_details["race_distance"],
+                boats=structured_boats
+            )
+            
+            return DetailedPrograms(
+                race_date=race_date,
+                stadium_number=stadium_number,
+                race_number=race_number,
+                data=detailed_data
+            )
+        else:
+            raise HTTPException(status_code=404, detail="プログラムデータが見つかりません")
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"日付の形式が正しくありません: {e}") from e
     except Exception as e:
