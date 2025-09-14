@@ -1,0 +1,71 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "ks415", email = "kawauso415@gmail.com" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "bvp-scraper-python",
+    "fastapi>=0.116.1",
+    "python-multipart>=0.0.20",
+    "uvicorn>=0.35.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.6.0",
+]
+
+[project.scripts]
+backend = "backend:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv.sources]
+bvp-scraper-python = { path = "../../bvp-scraper-python", editable = true }
+
+# Ruff設定
+[tool.ruff]
+# Python 3.10を基準とする
+target-version = "py310"
+# 行長を88文字に設定（Black互換）
+line-length = 88
+
+# リント設定
+[tool.ruff.lint]
+# 有効にするルール
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "RUF", # Ruff-specific rules
+]
+# 無視するルール
+ignore = [
+    "E501", # line too long (line-lengthで制御)
+]
+
+# ファイル別設定
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"] # 未使用インポートを許可
+
+# インポート整理設定
+[tool.ruff.lint.isort]
+known-first-party = ["backend", "bvp_scraper"]
+split-on-trailing-comma = true
+
+# フォーマット設定
+[tool.ruff.format]
+# 文字列内では二重引用符を優先
+quote-style = "double"
+# 末尾カンマを保持
+indent-style = "space"

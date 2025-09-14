@@ -1,0 +1,17 @@
+{
+  // Python設定
+  "python.defaultInterpreterPath": "./backend/.venv/bin/python",
+
+  // Python拡張機能設定
+  "python.linting.enabled": false,
+  "python.formatting.provider": "none",
+
+  // ファイル監視設定
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/*/**": true,
+    "**/.venv/**": true,
+    "**/__pycache__/**": true
+  }
+}
