@@ -1,7 +1,7 @@
-import axios from 'axios';
+import axios from "axios";
 
 // APIのベースURL
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = "http://localhost:8000/api";
 
 // APIクライアントの設定
 const apiClient = axios.create({
@@ -80,7 +80,7 @@ export const api = {
 
   // ヘルスチェック
   healthCheck: async () => {
-    const response = await apiClient.get('/health');
+    const response = await apiClient.get("/health");
     return response.data;
   },
 };

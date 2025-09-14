@@ -57,7 +57,7 @@ npm start
 
 ### パラメータ
 
-- `race_date`: レース日 (YYYY-MM-DD形式)
+- `race_date`: レース日 (YYYY-MM-DD 形式)
 - `stadium_number`: 競艇場番号 (1-24)
 - `race_number`: レース番号 (1-12)
 
@@ -79,7 +79,8 @@ bvp-scraper-python の変更は自動的に反映されます。
 
 ### API ドキュメント
 
-バックエンドが起動している状態で以下のURLにアクセス：
+バックエンドが起動している状態で以下の URL にアクセス：
+
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
 
@@ -91,11 +92,11 @@ bvp-scraper-python の変更は自動的に反映されます。
 2. Python 3.8+ がインストールされているか確認
 3. bvp-scraper-python のパスが正しいか確認
 
-### フロントエンドでAPIに接続できない
+### フロントエンドで API に接続できない
 
 1. バックエンドが起動しているか確認
-2. CORS設定が正しいか確認
-3. APIのベースURLが正しいか確認 (`src/api.ts`)
+2. CORS 設定が正しいか確認
+3. API のベース URL が正しいか確認 (`src/api.ts`)
 
 ### データが取得できない
 
